@@ -1,1 +1,1 @@
-## In this project, I learnt about shell scripting
+ Educational: In this project, i'm learning shell scripting
