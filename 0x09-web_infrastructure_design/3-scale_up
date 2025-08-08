@@ -1,0 +1,67 @@
+			WEB APPLICATION SCALE UP
+                    +-------------------+
+                    |   User's Browser  |
+                    +-------------------+
+                             |
+                             v
+                   +-------------------+
+                   |   DNS (foobar.com)|
+                   +-------------------+
+                             |
+                             v
+               +----------------------------------+
+               | Load Balancer Cluster (HAProxy)  |
+               | LB1 <-----> LB2 (failover)       |
+               +----------------------------------+
+                 /                 |               \
+                v                  v                v
+      +----------------+   +----------------+   +----------------+
+      |  Web Server 1  |   |  Web Server 2  |   |  Web Server 3  |
+      |  (Nginx)       |   |  (Nginx)       |   |  (Nginx)       |
+      +----------------+   +----------------+   +----------------+
+                |                  |                 |
+                v                  v                 v
+        +----------------------------------------------+
+        |       Application Servers (Gunicorn/etc.)   |
+        |  App Server 1   |   App Server 2             |
+        +----------------------------------------------+
+                |                  |
+                v                  v
+         +-----------------+  +-----------------+
+         |  Primary MySQL  |  | Replica MySQL   |
+         +-----------------+  +-----------------+
+
+Additional Elements & Why I Added Them
+1. New Server
+•	Why: To host one of the split components so each part of the system is more specialized and easier to scale independently.
+________________________________________
+2. Load Balancer Cluster (HAProxy LB1 + LB2)
+•	Why: Removes the load balancer as a single point of failure.
+•	How: Both LBs share a virtual IP — if one fails, the other takes over automatically.
+________________________________________
+3. Splitting Components Across Servers
+•	Web Servers (Nginx): Handle static content and route dynamic requests to app servers.
+•	Application Servers: Run your backend code and business logic without being burdened by static content delivery.
+•	Database Servers: Store and retrieve data — with one Primary for writes and one Replica for reads.
+Why:
+•	Easier to scale — you can add more web servers without touching the app or DB layers.
+•	Better performance — each server focuses on one job.
+•	Improved security — database isn’t exposed directly to the public.
+________________________________________
+Application Server vs Web Server
+•	Web Server (Nginx, Apache):
+o	Handles HTTP/HTTPS requests from users.
+o	Serves static files (HTML, CSS, JS, images).
+o	Can forward dynamic requests to the application server.
+•	Application Server (Gunicorn, uWSGI, Node.js runtime):
+o	Executes the backend code.
+o	Handles dynamic content generation (e.g., fetching user info from DB, processing forms).
+o	Talks to the database to get or store data.
+________________________________________
+Why This Infrastructure Scales Better
+•	You can add more web servers to handle spikes in traffic.
+•	You can add more app servers if code execution becomes a bottleneck.
+•	You can upgrade or scale the database layer separately.
+•	Load balancer cluster ensures no downtime if one LB fails.
+
+
