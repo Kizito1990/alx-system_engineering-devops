@@ -1,0 +1,83 @@
+
+ONE SERVER WEB INFRASTRUCTURE
+
+ User's Browser
+      |
+      | 1. HTTP/HTTPS request to www.foobar.com
+      v
++--------------------+
+|     DNS Server     |
+| (Domain foobar.com |
+| www -> 8.8.8.8)    |
++--------------------+
+      |
+      v
++-------------------------------+
+|           Server              |   (IP: 8.8.8.8)
+|                               |
+|  +------------------------+   |
+|  |   Nginx Web Server     |   | <- Receives request, serves static files or passes to app server
+|  +------------------------+   |
+|             |                 |
+|             v                 |
+|  +------------------------+   |
+|  | Application Server     |   | <- Runs code (e.g., Gunicorn for Python/Django)
+|  | (Codebase)             |   |
+|  +------------------------+   |
+|             |                 |
+|             v                 |
+|  +------------------------+   |
+|  | MySQL Database         |   | <- Stores website data
+|  +------------------------+   |
++-------------------------------+
+      |
+      v
+ User sees rendered website
+
+
+
+Component Roles & Explanations
+1. Server
+A server is a physical or virtual machine that stores, processes, and delivers data to other computers (clients) over a network.
+In this case, it’s a single server at IP 8.8.8.8 hosting all components.
+________________________________________
+2. Domain Name
+A domain name (foobar.com) is a human-friendly address that maps to your server’s IP.
+Instead of remembering 8.8.8.8, users type www.foobar.com.
+________________________________________
+3. DNS Record for www
+The www in www.foobar.com is a subdomain.
+It uses an A record in DNS to map www.foobar.com → 8.8.8.8.
+________________________________________
+4. Web Server (Nginx)
+Nginx handles:
+•	Receiving HTTP/HTTPS requests from users
+•	Serving static files (images, CSS, JS)
+•	Forwarding dynamic requests to the application server
+________________________________________
+5. Application Server
+The application server runs your backend codebase.
+Examples:
+•	Gunicorn for Python/Django
+•	uWSGI for Python/Flask
+It executes the business logic and communicates with the database.
+________________________________________
+6. Application Files (Codebase)
+My code  like HTML templates, backend scripts, configuration lives here.
+It’s what powers the dynamic content.
+________________________________________
+7. Database (MySQL)
+It stores and retrieves structured data for the website such as user accounts, posts, transactions, etc.
+________________________________________
+8. Communication Between Server & User
+Communication happens over the HTTP/HTTPS protocol, using TCP/IP as the transport layer.
+________________________________________
+Problems with This Infrastructure
+1.	SPOF (Single Point of Failure)
+	If the single server goes down, the entire website is offline.
+2.	Downtime During Maintenance
+	Restarting Nginx, application server, or database for updates will make the site unavailable temporarily.
+3.	Scalability Issues
+	A single server cannot handle a high volume of requests. The performance will degrade, or the server might crash.
+
+
