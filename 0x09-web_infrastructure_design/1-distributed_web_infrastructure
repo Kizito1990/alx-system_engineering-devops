@@ -1,0 +1,72 @@
+   TWO SERVER WEB INFRASTRUCTURE DESIGNS
+
+                   +------------------+
+                   |    User's Web    |
+                   |     Browser      |
+                   +------------------+
+                            |
+                            v
+                  +-------------------+
+                  |  DNS (foobar.com) |
+                  |  www -> LB's IP   |
+                  +-------------------+
+                            |
+                            v
+                 +---------------------+
+                 |   Load Balancer     |  (HAProxy)
+                 | Algo: Round Robin   |
+                 +---------------------+
+                  /                   \
+                 v                     v
+     +------------------+     +------------------+
+     |  Web/App Server 1 |     |  Web/App Server 2|
+     | Nginx + Codebase  |     | Nginx + Codebase |
+     +------------------+     +------------------+
+             |                         |
+             v                         v
+           +-------------------------------+
+           |  MySQL Database Cluster       |
+           |   Primary  <---->  Replica    |
+           +-------------------------------+
+
+
+Explanation of Components
+1. Load Balancer (HAProxy)
+•	Why we add it:
+Distributes incoming traffic between multiple servers to avoid overloading one server.
+•	Algorithm:
+Round Robin – sends the first request to Server 1, the next to Server 2, then repeats. This keeps the traffic balanced.
+•	Active-Active vs Active-Passive:
+o	Active-Active: All servers handle traffic at the same time (what we’re doing here).
+o	Active-Passive: Only one server handles traffic; the other is on standby and takes over if the active one fails.
+________________________________________
+2. Two Web/Application Servers (Nginx + Codebase)
+•	Why we add them:
+If one server fails, the other can still serve requests. Also allows sharing the load.
+•	Role:
+o	Nginx handles incoming requests and static content.
+o	Passes dynamic requests to the application code.
+o	Codebase processes requests and may query the database.
+________________________________________
+3. Database Cluster (Primary-Replica)
+•	Why we add it:
+Improves reliability and performance.
+•	How it works:
+o	Primary (Master) node handles all write operations (insert, update, delete).
+o	Replica (Slave) node gets a copy of the data and handles read queries.
+o	Replica syncs with Primary in near real time.
+•	Difference for the Application:
+	When app needs to save data → talks to Primary.
+	When app needs to read data → can talk to Replica for faster performance.
+________________________________________
+
+Issues with This Infrastructure
+1.	SPOF (Single Point of Failure):
+	The load balancer is still a single machine — if it fails, everything is down.
+	The Primary database is also a SPOF — if it fails, writes cannot happen.
+2.	Security Issues:
+	No firewall to block unwanted traffic.	No HTTPS → data sent in plain text, vulnerable to interception.
+3.	No Monitoring:
+	No system to detect server failures, performance issues, or suspicious activity.
+
+
